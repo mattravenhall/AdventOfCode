@@ -1,1 +1,1 @@
-eval(''.join([line.strip() for line in open('input.txt')]))
+print(eval(''.join([line.strip() for line in open('input.txt')])))
