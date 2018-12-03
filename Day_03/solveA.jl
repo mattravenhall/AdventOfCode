@@ -1,7 +1,6 @@
 x = [line for line in readlines(open("example.txt"))]
 
 function processID(line)
-#	return([split(replace(replace(strip(split(line, '@')[2]), ": " => ","), "x" => ","), ','), strip(split(line, '@')[1])])
 	return(split(replace(replace(strip(split(line, '@')[2]), ": " => ","), "x" => ","), ','))
 end
 
@@ -32,11 +31,3 @@ for i in range(1, length=length(Xgaps))
 end
 
 print(sum([sum([square >= 2 for square in line]) for line in fabric]), '\n')
-
-#for i in range(len(Xgaps)):
-#	for x in range(Xgaps[i], Xgaps[i]+Xwidths[i]):
-#		for y in range(Ygaps[i], Ygaps[i]+Ywidths[i]):
-#			fabric[x][y] += 1
-
-#print(fabric)
-#print(sum([sum([square >= 2 for square in line]) for line in fabric]))
