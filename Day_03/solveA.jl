@@ -1,5 +1,3 @@
-x = [line for line in readlines(open("example.txt"))]
-
 function processID(line)
 	return(split(replace(replace(strip(split(line, '@')[2]), ": " => ","), "x" => ","), ','))
 end
