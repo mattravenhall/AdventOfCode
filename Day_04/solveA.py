@@ -46,10 +46,4 @@ topSleeper_times = dict(pd.Series(sleepytimes[topSleeper]).value_counts())
 topMinute = max(topSleeper_times, key=topSleeper_times.get)
 
 # ID of guard * minute most asleep
-print(logs)
-print()
-print(sleepytimes)
-print()
-print('Guard: {}'.format(topSleeper))
-print('Minute: {}'.format(topMinute))
 print(int(topSleeper) * topMinute)

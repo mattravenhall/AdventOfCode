@@ -52,6 +52,4 @@ for guard in sleepytimes.keys():
 		top_guard = guard
 		top_time = timepoint
 
-print('Guard: {}'.format(top_guard))
-print('Time: {}'.format(top_time))
 print(int(top_guard) * top_time)
