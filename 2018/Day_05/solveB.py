@@ -1,65 +1,71 @@
+#!/usr/bin/env python3
+
 import os
+import string
+
 
 # Base clash finding function
-def checkClash(charA, charB):
-	if charA.lower() != charB.lower():
+def check_clash(char_a, char_b):
+	if char_a.lower() != char_b.lower():
 		return False
-	elif charA.isupper() + charB.isupper() != 1:
+	elif char_a.isupper() + char_b.isupper() != 1:
 		return False
 	else:
 		return True
 
-def readFile(seq):
-	if os.path.isfile(seq):
-		lines = open(seq).readlines()
+
+def read_file(filename):
+	if not os.path.isfile(filename):
+		print('Invalid file')
+		return
+	else:
+		lines = open(filename).readlines()
 		if len(lines) == 1:
-			return(lines[0].strip())
+			return lines[0].strip()
 		else:
 			print('Multiple lines found in input file')
 			return
 
+
 # Remove specific bases
-def removeBase(seq, base):
-	if os.path.isfile(seq):
-		seq = readFile(seq)
-	return(seq.replace(base.lower(),'').replace(base.upper(),''))
+def remove_base(seq, base):
+	return seq.replace(base.lower(), '').replace(base.upper(), '')
+
 
 # Scan sequence for clashing pairs, only keep non-clashes, rescan until none are found
-def scanSeq(seq):
-	if os.path.isfile(seq):
-		seq = readFile(seq)
+def scan_seq(seq):
+	no_changes = False
+	previous_clashed = False
 
-	noChanges = False
-	previousClashed = False
-
-	while not noChanges:
+	while not no_changes:
 		seq2 = ''
 		for i in range(len(seq)):
 			# This prevents 'cCc'-like motifs being fully excluded
-			if previousClashed:
-				previousClashed = False
+			if previous_clashed:
+				previous_clashed = False
 				continue
 			# Perform forward check, unless at the end of the sequence
-			if i+1 <= len(seq)-1 and checkClash(seq[i], seq[i+1]):
-				previousClashed = True
+			if i+1 <= len(seq)-1 and check_clash(seq[i], seq[i+1]):
+				previous_clashed = True
 				continue
 			# Add 0-base if no clash was found
 			else:
-				previousClashed = False
+				previous_clashed = False
 				seq2 += seq[i]
 		# Check if sequence length has changed, set leave bool if it hasn't
 		if len(seq) == len(seq2):
-			noChanges = True
+			no_changes = True
 		seq = seq2
 
-	return(len(seq))
+	return len(seq)
+
 
 # Find shortest possible sequence, given base removal
-minLen = 9999999999999999999
-for base in 'abcdefghijklmnopqrstuvwxyz':
-	seqLen = scanSeq(removeBase('input.txt', base))
+minLen = float("inf")
+file_seq = read_file('input.txt')
+for base_lc in string.ascii_lowercase:
+	seqLen = scan_seq(remove_base(file_seq, base_lc))
 	if seqLen < minLen:
 		minLen = seqLen
-		baseRemoved = base
-#	print('{0}: {1}'.format(base, seqLen))
+		baseRemoved = base_lc
 print(minLen)
