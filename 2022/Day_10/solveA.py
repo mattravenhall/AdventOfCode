@@ -10,13 +10,12 @@ def solveA(filename: str) -> int:
 	reports: list[int] = []
 
 	commands = [line.strip().split() for line in open(filename).readlines()]
-	n_commands = len(commands)
 	commands = iter(commands)
 	out_of_commands: bool = False
 
 	in_addx: bool = False
 	cycle = 0
-	while not out_of_commands or cycle <=  max(store.keys() if store.keys() else 0, 0):
+	while not out_of_commands or cycle <= max(store.keys() if store.keys() else 0, 0):
 		if cycle in store.keys():
 			del store[cycle]
 
@@ -25,7 +24,7 @@ def solveA(filename: str) -> int:
 		# Process cycle command
 		if not in_addx:
 			command = next(commands, None)
-			if command == None:
+			if command is None:
 				out_of_commands = True
 		else:
 			in_addx = False
