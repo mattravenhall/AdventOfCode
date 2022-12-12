@@ -63,10 +63,13 @@ class Graph:
 		else:
 			return string.ascii_lowercase.index(value)
 
-	def shortest_bfs(self) -> int:
+	def shortest_bfs(self, start = None) -> int:
 		# Breadth-first search: https://en.wikipedia.org/wiki/Breadth-first_search
-		previous = {self.source: None}
-		queue = [self.source]
+		if start is None:
+			start = self.source
+
+		previous = {start: None}
+		queue = [start]
 
 		while queue:
 			current = queue.pop(0)
@@ -79,34 +82,38 @@ class Graph:
 					queue.append(child)
 					previous[child] = current
 
+		# Catch broken paths
+		if current != self.target:
+			return math.inf
+
 		# Build path
 		path = []
-		current = self.target
-		while current != self.source:
+		while current != start:
 			path.append(current)
 			current = previous[current]
 
 		return len(path)
 
-	def shortest_dijkstras(self) -> int:
+	def shortest_dijkstras(self, start = None) -> int:
 		# Dijkstra's algorithm: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+		if start is None:
+			start = self.source
 
 		# Distance from source node
 		distances = {
 			node: math.inf for node in self.nodes
 		}
-		distances[self.source] = 0
+		distances[start] = 0
 
 		# Path parent
 		previous = {
 			node: None for node in self.nodes
-			if node != self.source
+			if node != start
 		}
 
 		# Set of visited nodes
 		unvisited = {
 			node for node in self.nodes
-			# if node != self.source
 		}
 
 		while unvisited:
@@ -143,19 +150,22 @@ class Graph:
 					distances[child] = new_distance
 					previous[child] = current['coords']
 
+		current = current["coords"]
+
+		# Catch broken paths
+		if current != self.target:
+			return math.inf
+
 		# Build path
 		path = []
-		current = self.target
-		while current != self.source:
+		while current != start:
 			path.append(current)
 			current = previous[current]
 
 		return len(path)
 
-		return distances[self.target]
 
-
-def solveA(filename:str) -> int:
+def solveA(filename: str) -> int:
 	# Parse input into a graph
 	graph = Graph(filename)
 
@@ -163,7 +173,23 @@ def solveA(filename:str) -> int:
 	return graph.shortest_dijkstras()
 
 
+def solveB(filename: str) -> int:
+	# Parse input into a graph
+	graph = Graph(filename)
+
+	start_points = {
+		node['coords'] for node in graph.nodes.values()
+		if node['value'] == 'a'
+	}
+
+	distances = {start: graph.shortest_bfs(start) for start in start_points}
+
+	return min(distances.values())
+
+
 if __name__ == '__main__':
 	assert solveA("test.txt") == 31
-
 	print(solveA("input.txt"))
+
+	assert solveB("test.txt") == 29
+	print(solveB("input.txt"))
