@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from operator import add, sub
+from operator import add
 
 # HashMap of valid directions and their valid connectors
 directions = {
