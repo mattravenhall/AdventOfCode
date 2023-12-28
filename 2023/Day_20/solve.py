@@ -2,6 +2,7 @@
 
 from abc import ABC
 from collections import defaultdict
+import math
 import re
 from queue import Queue
 from typing import Literal
@@ -24,7 +25,7 @@ class Module(ABC):
 
     def send_pulse(self, strength: Literal['high', 'low']):
         for destination in self.destinations:
-            print(f"{self.name} -{strength}-> {destination}")
+            # print(f"{self.name} -{strength}-> {destination}")
             pulses_sent[strength] += 1
 
             if destination not in modules:
@@ -90,6 +91,8 @@ class Conjunction(Module):
         if set(self.memory.values()) == {"high"}:
             self.send_pulse("low")
         else:
+            if part_two_components.get(self.name) == math.inf:
+                part_two_check.append(self.name)
             self.send_pulse("high")
 
 
@@ -136,12 +139,40 @@ def press_button(strength: Literal['low', 'high'] = 'low'):
         # print(f"Queue size: {pulse_queue.qsize()}", end='\r')
 
 
-def solveA():
+def solve():
+    global part_two_components
+    part_two_components = {
+        key: math.inf
+        for key
+        in ["kh", "lz", "tg", "hn"]
+    }
+    global part_two_check
+    part_two_check = []
+
+    # Part One
     for i in range(1000):
-        # print(f"Pressed {i+1} time{'s' if i + 1 != 1 else ''}")
         press_button()
+        for module in part_two_check:
+            part_two_components[module] = i + 1
+        part_two_check = []
+
+    # Part Two
+    # This is a little specific to my input
+    # rx is fed by &cs
+    # rx will only be sent a low if all inputs to &cs are high
+    # Therefore, the lcm of high pulses to the &cs inputs should be our answer
+    # Get LCM of kh, lz, tg, hn being high
+    button_presses = i + 1
+    while math.inf in part_two_components.values():
+        button_presses += 1
+        press_button()
+        for module in part_two_check:
+            part_two_components[module] = button_presses
+        part_two_check = []
+
+    presses_to_rx_low = math.lcm(*part_two_components.values())
     
-    return pulses_sent['high'] * pulses_sent['low']
+    return pulses_sent['high'] * pulses_sent['low'], presses_to_rx_low
 
 
-print(solveA())
+print(solve())
