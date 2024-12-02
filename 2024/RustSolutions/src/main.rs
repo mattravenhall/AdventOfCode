@@ -7,10 +7,13 @@ use clap::Parser;
 struct Args {
     #[arg(short, long)]
     day: u8,
+
+    #[arg(short, long, action)]
+    test: bool,
 }
 
 fn main() {
     let args = Args::parse();
 
-    solve::for_day(args.day);
+    solve::for_day(args.day, args.test);
 }
