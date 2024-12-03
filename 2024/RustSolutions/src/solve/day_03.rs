@@ -32,7 +32,6 @@ pub fn solve(input_path: String) {
    		for command in re_part_b.captures_iter(line) {
    			match (command.get(0).expect("re_part_b match failed").as_str(), active) {
    				(command_str, active) if command_str.starts_with("mul") => {
-   					// solution_b += 
    					if active {
 						let x: u32 = command.get(1).expect("Unable to find x value in mul()").as_str().parse().expect("x is not a valid u32");
 						let y: u32 = command.get(2).expect("Unable to find y value in mul()").as_str().parse().expect("y is not a valid u32");
