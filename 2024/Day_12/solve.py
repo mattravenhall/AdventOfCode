@@ -82,7 +82,7 @@ class GardenExplorer():
         while borders:
             inside, outside = borders.pop()
             side = {(inside, outside)}
-            print(f"origin={inside}, {outside}")
+            # print(f"origin={inside}, {outside}")
 
             # Travel on x axis
             distance = 1
@@ -144,12 +144,12 @@ class GardenExplorer():
             area = len(garden)
             if apply_discount:
                 n_sides = self._count_sides(garden)
-                print(f"{area=} * {n_sides=}")
+                # print(f"{area=} * {n_sides=}")
                 total += area * n_sides
             else:
                 perimeter = sum([len(borders) for borders in garden.values()])
                 total += area * perimeter
-        print(total)
+        # print(total)
 
         return total
 
