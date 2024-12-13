@@ -2,35 +2,8 @@
 
 import re
 
-import numpy as np
-
-
 re_button = r"Button (A|B): X\+(\d+), Y\+(\d+)"
 re_prize = r"Prize: X=(\d+), Y=(\d+)"
-
-
-# Costs:
-# - A: 3 tokens
-# - B: 1 token
-
-# Solve: 3a + 1b = prize
-# n_a < 100
-# n_b < 100
-
-
-# To win prize: must position claw exactly
-# Max button press: 100
-
-# Weighted combination of vectors to get to position?
-
-# What is the fewest tokens you would have to spend to win all possible prizes?
-
-
-# Linear algebra?
-# n_a * v_a + n_b * v_b = location
-
-# Integer Linear Programming?
-
 
 class ClawMachine():
     costs: dict = {
