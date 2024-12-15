@@ -133,7 +133,7 @@ class RobotRestroom():
 
             fig, ax = plt.subplots()
             ax.set_xlim(0, self.space[0])
-            ax.set_ylim(0, self.space[1])
+            ax.set_ylim(self.space[1], 0)
             ax.set_axis_off()
             title = ax.text(0.5,0.85, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5}, transform=ax.transAxes, ha="center")
             fig.tight_layout(pad=0)
@@ -167,7 +167,7 @@ class RobotRestroom():
             for step in range(start_frame, start_frame + total_steps):
                 fig, ax = plt.subplots()
                 ax.set_xlim(0, self.space[0])
-                ax.set_ylim(0, self.space[1])
+                ax.set_ylim(self.space[1], 0)
                 ax.set_axis_off()
                 title = ax.text(0.5,0.85, "", bbox={'facecolor':'w', 'alpha':0.5, 'pad':5}, transform=ax.transAxes, ha="center")
                 fig.tight_layout(pad=0)
