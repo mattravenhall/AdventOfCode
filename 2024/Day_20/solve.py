@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 import math
 import random
 from typing import Optional
@@ -33,6 +33,7 @@ class RaceTrack:
         'E': '🏁',
         'P': '🏾', #'🟨',
         '1': '🔷',
+        '+': '🟪',
         '2': '🔶',
         '<': '⬅️ ',
         '^': '⬆️ ',
@@ -48,7 +49,7 @@ class RaceTrack:
         '*': '🪶',
     }
 
-    def __init__(self, input_file: str) -> None:
+    def __init__(self, input_file: str, debug: bool = False) -> None:
         self.track, self.locations = self._parse_input(input_file)
         top_left = min(self.track.keys())
         bottom_right = max(self.track.keys())
@@ -57,8 +58,8 @@ class RaceTrack:
             'y': (top_left[1], bottom_right[1]+1),
         }
         self.initial_time, self.full_path = self._shortest_dijkstras()
-        self.cheats = self._find_cheats(self.full_path)
-        self._display_track(path_steps=self.full_path)
+        if debug:
+            self._display_track(path_steps=self.full_path)
 
     def _parse_input(self, input_file: str) -> tuple[dict, dict]:
         locations = {
@@ -97,12 +98,14 @@ class RaceTrack:
             return True
         return False
 
-    def _display_track(self, path_steps: Optional[dict] = {}, cheat: Optional[tuple[tuple[int, int], tuple[int, int]]] = None):
+    def _display_track(self, path_steps: Optional[dict] = {}, cheat: Optional[tuple[tuple, tuple, tuple]] = None):
         for y in range(*self.limits['y']):
             row = ''
             for x in range(*self.limits['x']):
-                if cheat is not None and (x, y) == cheat[1]:
+                if cheat is not None and (x, y) == cheat[0]:
                     row += self.visuals['1']
+                elif cheat is not None and (x, y) == cheat[1]:
+                    row += self.visuals['+']
                 elif cheat is not None and (x, y) == cheat[2]:
                     row += self.visuals['2']
                 elif self._on_border((x, y)):
@@ -187,7 +190,49 @@ class RaceTrack:
 
         return distance, nodes_in_paths
 
-    def _find_cheats(self, path_nodes: dict) -> set:
+    def _get_path_in_manhattan_distance(self, origin: tuple, max_distance: int = 20) -> set:
+        """Identify candidate skip locations within a maximum manhattan distance"""
+        coords = set()
+        for dx in range(-max_distance, max_distance + 1):
+            dist_remaining = max_distance - abs(dx)
+            for dy in range(-dist_remaining, dist_remaining + 1):
+                # Don't include self
+                if dx == 0 and dy == 0:
+                    continue
+
+                cand_x = origin[0] + dx
+                cand_y = origin[1] + dy
+                candidate = (cand_x, cand_y)
+
+                # Don't include out of bound
+                if not (self.limits['x'][0] <= cand_x <= self.limits['x'][1]):
+                    continue
+                if not (self.limits['y'][0] <= cand_y <= self.limits['y'][1]):
+                    continue
+                
+                # Only include paths and exits
+                if candidate not in self.full_path.keys():
+                    continue
+
+                # Don't include upstream exits
+                if self.full_path[candidate] < self.full_path[origin]:
+                    continue
+
+                # Don't include paths that aren't shortcuts
+                distance = max_distance - (dist_remaining - abs(dy))
+                if distance == 0:
+                    continue
+                if (self.full_path[candidate] - self.full_path[origin]) <= distance:
+                    continue
+
+                coords.add(((cand_x, cand_y), distance))
+        return coords
+    
+    @staticmethod
+    def manhattan_distance(x: tuple, y: tuple) -> int:
+        return abs(x[0] - y[0]) + abs(x[1] - y[1])
+    
+    def _find_cheats_part_1(self, path_nodes: dict) -> set:
         """Travel path and locate cheat locations ('#' with '.' behind)"""
         cheats = set()
         for cheat_enter in path_nodes.keys():
@@ -203,29 +248,46 @@ class RaceTrack:
                     if path_nodes[cheat_exit] > path_nodes[cheat_enter]:
                         cheats.add((cheat_enter, cheat_skip, cheat_exit))
         return cheats
+    
+    def _find_cheats_part_2(self, path_nodes: dict) -> set:
+        """Just scan around with a distance of X, find spaces that reduce distance taken, return no cheat_skip"""
+        cheats = set()
+        for cheat_enter in path_nodes.keys():
+            for cheat_exit, distance in self._get_path_in_manhattan_distance(cheat_enter):
+                # Cheat exit must be on the path at a larger distance
+                if path_nodes[cheat_exit] > path_nodes[cheat_enter]:
+                    cheats.add((cheat_enter, '', cheat_exit))
+        return cheats
 
-    def count_cheats(self, threshold: int = 100) -> int:
+    def count_cheats(self, part: int, threshold: int = 100, debug: bool = False) -> int:
+        """Determine time saved by each cheat, count up the number that exceed our threshold"""
+        if part == 1:
+            self.cheats = self._find_cheats_part_1(self.full_path)
+        else:
+            self.cheats = self._find_cheats_part_2(self.full_path)
+
         cheat_times = {}
-        for c_start, c_skip, c_end in self.cheats:
-            # time_w_cheat, path_w_cheat = self._shortest_dijkstras(cheat=c_skip)
-            # time_saved = self.initial_time - time_w_cheat
-            time_saved = self.full_path[c_end] - self.full_path[c_start] - 2
+        for c_enter, c_skip, c_exit in self.cheats:
+            time_saved = self.full_path[c_exit] - self.full_path[c_enter] - self.manhattan_distance(c_enter, c_exit)
 
+            if time_saved:
+                if debug:
+                    path_w_cheat = {
+                        position: distance
+                        for position, distance in self.full_path.items()
+                        if (distance <= self.full_path[c_enter]) or (distance >= self.full_path[c_exit])
+                    }
+                    self._display_track(path_steps=path_w_cheat, cheat=(c_enter, c_skip, c_exit))
+                    print(f"Time Saved: {time_saved}")
+                    breakpoint()
+                if part == 1:
+                    c_skip = '|'.join(map(str,c_skip))
+                cheat_times[(c_enter, c_skip, c_exit)] = time_saved
 
-            # if time_saved > 35:
-            #     path_w_cheat = {
-            #         position: distance
-            #         for position, distance in self.full_path.items()
-            #         if (distance <= self.full_path[c_start]) or (distance >= self.full_path[c_end])
-            #     }
-            #     self._display_track(path_steps=path_w_cheat, cheat=(c_start, c_skip, c_end))
-            #     print(f"Time Saved: {time_saved}")
-            #     breakpoint()
-            cheat_times[(c_start, c_end)] = time_saved
-        
-        # counts = Counter(cheat_times)
         return len([cheat for cheat, saving in cheat_times.items() if saving >= threshold])
-        
-# print(RaceTrack("./test.txt").count_cheats())
 
-print(f"A: {RaceTrack('./input.txt').count_cheats()}")
+assert RaceTrack("./test.txt", debug=False).count_cheats(part=1, threshold=0) == 44
+assert RaceTrack("./test.txt", debug=False).count_cheats(part=2, threshold=50) == 285
+
+print(f"A: {RaceTrack('./input.txt', debug=False).count_cheats(part=1)}")  # 1367
+print(f"B: {RaceTrack('./input.txt', debug=False).count_cheats(part=2)}")  # 1006850
