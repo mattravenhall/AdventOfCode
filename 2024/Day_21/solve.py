@@ -4,6 +4,14 @@ from functools import cache
 import re
 
 
+paths_digits = {
+
+}
+paths_arrows = {
+
+}
+
+
 class Pad:
     name: str
     position: tuple
@@ -44,9 +52,17 @@ class Pad:
                 return False
         return True
 
-    @cache
     def _find_path_to(self, position: tuple, destination: str) -> str:
         """Identify the shortest path to a given location from the current position, return the movement sequence"""
+
+        # Implement shared cache
+        cache_key = (position, destination)
+        if self.name.startswith("Arrow"):
+            if cache_key in paths_arrows.keys():
+                return paths_arrows[cache_key]
+        elif self.name.startswith("Digit"):
+            if cache_key in paths_digits.keys():
+                return paths_digits[cache_key]
 
         position_orig = position
         if destination not in self.positions:
@@ -80,6 +96,11 @@ class Pad:
         if not self._path_is_valid(position_orig, path_sorted):
             path_sorted = path_sorted[::-1]
         path = path_sorted + 'A'
+
+        if self.name.startswith("Arrow"):
+            paths_arrows[(position_orig, destination)] = path
+        elif self.name.startswith("Digit"):
+            paths_digits[(position_orig, destination)] = path
 
         return path
 
@@ -134,13 +155,37 @@ class ButtonChain:
     
     @cache
     def _find_shortest_sequence(self, code: str) -> str:
-        for pad in self.pads:
+        for i, pad in enumerate(self.pads):
             sequence = ''
             for destination in code:
                 sequence += pad._find_path_to(pad.position, destination)
                 pad.position = pad.positions[destination]
             code = sequence
         return code
+
+    @cache
+    def _calculate_shortest_sequence(self, code: str) -> int:
+        seq_digits = ''
+        digits_pad = self.pads[0]
+        for destination in code:
+            seq_digits += digits_pad._find_path_to(digits_pad.position, destination)
+            digits_pad.position = digits_pad.positions[destination]
+
+        from collections import Counter
+
+        counts_total = Counter(map(lambda x: x+'A', seq_digits.split('A')[:-1]))
+
+        # Calculate robot sequences numerically
+        for arrows_pad in self.pads[1:]:
+            counts_latest = Counter()
+            for pattern, count in counts_total.items():
+                seq_arrows = ''
+                for destination in pattern:
+                    seq_arrows = arrows_pad._find_path_to(arrows_pad.position, destination)
+                    arrows_pad.position = arrows_pad.positions[destination]
+                    counts_latest[seq_arrows] += count
+            counts_total = counts_latest
+        return sum([len(k) * v for k, v in counts_total.items()])
 
     def reset(self):
         """Reset locations of all pad robots"""
@@ -150,31 +195,26 @@ class ButtonChain:
     def calc_complexities(self) -> int:
         total_complexity = 0
         for input_code in self.input_codes:
-            len_seq = len(self._find_shortest_sequence(input_code))
+            # len_seq = len(self._find_shortest_sequence(input_code))
+            min_len = self._calculate_shortest_sequence(input_code)
             num_code = int(re.match(r'\d+', input_code).group())
-            complexity = len_seq * num_code
+            complexity = min_len * num_code
             total_complexity += complexity
         return total_complexity
 
 
 # Ensure path finding works as expected
-# path_tester = ButtonChain("./test.txt")
-# assert len(path_tester.pads[0]._find_path_to('1')) == 4
-# assert path_tester.pads[0]._find_path_to('1') == "A"
-# path_tester.pads[0].reset()
-# assert len(path_tester.pads[0]._find_path_to('8')) == 5
-
-# assert len(path_tester.pads[1]._find_path_to('<')) == 4
-# assert path_tester.pads[1]._find_path_to('<') == 'A'
-# path_tester.pads[1].reset()
-# assert path_tester.pads[1]._find_path_to('>') == 'VA'
-
 tester = ButtonChain("./test.txt")
 assert len(tester._find_shortest_sequence("029A")) == 68
 assert len(tester._find_shortest_sequence("980A")) == 60
 assert len(tester._find_shortest_sequence("179A")) == 68
 assert len(tester._find_shortest_sequence("456A")) == 64
 assert len(tester._find_shortest_sequence("379A")) == 64
+assert tester._calculate_shortest_sequence("029A") == 68
+assert tester._calculate_shortest_sequence("980A") == 60
+assert tester._calculate_shortest_sequence("179A") == 68
+assert tester._calculate_shortest_sequence("456A") == 64
+assert tester._calculate_shortest_sequence("379A") == 64
 assert ButtonChain("./test.txt").calc_complexities() == 126384
 
 print(f"A: {ButtonChain('./input.txt', dir_robots=2).calc_complexities()}")
