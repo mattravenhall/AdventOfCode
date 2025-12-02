@@ -1,5 +1,5 @@
 # 🎄 AdventOfCode
-Solutions to adventofcode.com problems.
+Solutions to [adventofcode.com](https://adventofcode.com/) problems.
 
 ## Track Record
 
@@ -12,3 +12,4 @@ Solutions to adventofcode.com problems.
 2023|🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟦⬛⬛⬛⬛  
 2024|🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩  
 2025|🟩🟩⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛
+
